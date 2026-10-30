@@ -1,0 +1,30 @@
+# Variables y archivos privados
+.env
+.env.*
+!.env.example
+
+# Entornos virtuales de Python
+.venv/
+venv/
+__pycache__/
+*.py[cod]
+
+# Dependencias de Node
+node_modules/
+
+# Archivos generados
+dist/
+dist-ssr/
+
+# Archivos temporales
+*.log
+.DS_Store
+
+# Configuración local
+.vscode/
+.idea/
+
+# Archivos de cobertura de pruebas
+.coverage
+.coverage.*
+htmlcov/
