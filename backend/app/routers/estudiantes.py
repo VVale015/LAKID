@@ -29,3 +29,15 @@ def mis_logros(
     db: Session = Depends(get_db),
 ):
     return estudiante_service.obtener_logros(db, usuario)
+
+@router.post(
+    "/me/resultados",
+    response_model=schemas.ResultadoOut,
+    status_code=201,
+)
+def registrar_resultado(
+    datos: schemas.ResultadoRequest,
+    usuario: Usuario = Depends(require_roles("ESTUDIANTE")),
+    db: Session = Depends(get_db),
+):
+    return estudiante_service.registrar_resultado(db, usuario, datos)

@@ -1,9 +1,12 @@
+// frontend/src/components/activities/AlphabetActivity.tsx
+
 import { useState, useEffect } from "react";
 import { ArrowLeft, Volume2 } from "lucide-react";
 import { letterQuestions } from "@/data";
 import FeedbackBanner from "@/components/FeedbackBanner";
 import { useApp } from "@/store";
 import type { AreaKey } from "@/types";
+import { registrarResultado, progresoAEstudiante } from "@/services/resultados";
 
 interface Props {
   onBack: () => void;
@@ -21,8 +24,9 @@ function speak(text: string) {
 }
 
 export default function AlphabetActivity({ onBack, onComplete }: Props) {
-  const { currentStudent, completeActivity } = useApp();
+  const { currentStudent, completeActivity, updateStudent } = useApp();
   const [index, setIndex] = useState(0);
+  const [correctCount, setCorrectCount] = useState(0);
   const [feedback, setFeedback] = useState<{ type: "correct" | "incorrect"; msg: string } | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
 
@@ -37,23 +41,35 @@ export default function AlphabetActivity({ onBack, onComplete }: Props) {
     if (selected) return;
     setSelected(letter);
     const correct = letter === question.letter;
+    if (correct) setCorrectCount((n) => n + 1);
     setFeedback({
       type: correct ? "correct" : "incorrect",
       msg: correct ? "¡Excelente!" : "Inténtalo nuevamente",
     });
   };
 
-  const handleFeedbackDone = () => {
-    setFeedback(null);
-    setSelected(null);
+  const handleFeedbackDone = async () => {
+  setFeedback(null);
+  setSelected(null);
+
+  if (index + 1 < letterQuestions.length) {
+    setIndex(index + 1);
+    return;
+  }
+
+  // Última pregunta: se registra UNA sola vez el resultado de la actividad
+  const porcentaje = Math.round((correctCount / letterQuestions.length) * 100);
     if (currentStudent) {
+      // Temporal: mantiene al día las asignaciones locales hasta conectarlas al back
       completeActivity(currentStudent.id, "alphabet" as AreaKey);
+      try {
+        const resultado = await registrarResultado("alphabet", porcentaje);
+        updateStudent(currentStudent.id, progresoAEstudiante(resultado.progreso));
+      } catch (e) {
+        console.error("No se pudo registrar el resultado", e);
+      }
     }
-    if (index + 1 < letterQuestions.length) {
-      setIndex(index + 1);
-    } else {
-      onComplete();
-    }
+    onComplete();
   };
 
   return (

@@ -1,9 +1,12 @@
-import { useState, useEffect } from "react";
+// frontend/src/components/activities/GamesActivity.tsx
+
+import { useState, useEffect, useRef } from "react";
 import { ArrowLeft, RefreshCw } from "lucide-react";
 import { memoryCards } from "@/data";
 import FeedbackBanner from "@/components/FeedbackBanner";
 import { useApp } from "@/store";
 import type { AreaKey } from "@/types";
+import { registrarResultado, progresoAEstudiante } from "@/services/resultados";
 
 interface Props {
   onBack: () => void;
@@ -33,7 +36,8 @@ function shuffleCards(): CardState[] {
 }
 
 export default function GamesActivity({ onBack, onComplete }: Props) {
-  const { currentStudent, completeActivity } = useApp();
+  const { currentStudent, completeActivity, updateStudent } = useApp();
+  const registrado = useRef(false);
   const [cards, setCards] = useState<CardState[]>(shuffleCards);
   const [flipped, setFlipped] = useState<number[]>([]);
   const [moves, setMoves] = useState(0);
@@ -64,7 +68,15 @@ export default function GamesActivity({ onBack, onComplete }: Props) {
   useEffect(() => {
     if (cards.length > 0 && cards.every((c) => c.matched)) {
       setWon(true);
-      if (currentStudent) completeActivity(currentStudent.id, "games" as AreaKey);
+      // La bandera evita enviar el resultado más de una vez por partida
+      if (currentStudent && !registrado.current) {
+        registrado.current = true;
+        // Temporal: mantiene al día las asignaciones locales hasta conectarlas al back
+        completeActivity(currentStudent.id, "games" as AreaKey);
+        registrarResultado("games", 100)
+          .then((r) => updateStudent(currentStudent.id, progresoAEstudiante(r.progreso)))
+          .catch((e) => console.error("No se pudo registrar el resultado", e));
+      }
     }
   }, [cards, currentStudent]);
 
@@ -79,6 +91,7 @@ export default function GamesActivity({ onBack, onComplete }: Props) {
     setFlipped([]);
     setMoves(0);
     setWon(false);
+    registrado.current = false;
   };
 
   const handleFeedbackDone = () => {

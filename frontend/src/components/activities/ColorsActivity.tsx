@@ -1,9 +1,12 @@
+// frontend/src/components/activities/ColorsActivity.tsx
+
 import { useState } from "react";
 import { ArrowLeft } from "lucide-react";
 import { colorQuestions, colorMap } from "@/data";
 import FeedbackBanner from "@/components/FeedbackBanner";
 import { useApp } from "@/store";
 import type { AreaKey } from "@/types";
+import { registrarResultado, progresoAEstudiante } from "@/services/resultados";
 
 interface Props {
   onBack: () => void;
@@ -11,34 +14,49 @@ interface Props {
 }
 
 export default function ColorsActivity({ onBack, onComplete }: Props) {
-  const { currentStudent, completeActivity } = useApp();
+  const { currentStudent, completeActivity, updateStudent } = useApp();
   const [index, setIndex] = useState(0);
   const [feedback, setFeedback] = useState<{ type: "correct" | "incorrect"; msg: string } | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
-
+  const [correctCount, setCorrectCount] = useState(0);
+  
   const question = colorQuestions[index];
 
   const handleAnswer = (color: string) => {
     if (selected) return;
     setSelected(color);
     const correct = color === question.correctColor;
+    if (correct) setCorrectCount((n) => n + 1);
     setFeedback({
       type: correct ? "correct" : "incorrect",
       msg: correct ? "¡Muy bien!" : "Inténtalo nuevamente",
     });
   };
 
-  const handleFeedbackDone = () => {
+    const handleFeedbackDone = async () => {
     setFeedback(null);
     setSelected(null);
-    if (currentStudent) {
-      completeActivity(currentStudent.id, "colors" as AreaKey);
-    }
+
     if (index + 1 < colorQuestions.length) {
       setIndex(index + 1);
-    } else {
-      onComplete();
+      return;
     }
+
+    // Última pregunta: se registra UNA sola vez el resultado de la actividad
+  const porcentaje = Math.round((correctCount / colorQuestions.length) * 100);
+    if (currentStudent) {
+      // Temporal: mantiene al día las asignaciones locales hasta conectarlas al back
+      completeActivity(currentStudent.id, "colors" as AreaKey);
+      try {
+        const resultado = await registrarResultado("colors", porcentaje);
+        // El progreso que manda el back reemplaza al cálculo local
+        updateStudent(currentStudent.id, progresoAEstudiante(resultado.progreso));
+      } catch (e) {
+        // Si el back falla, el niño no se queda bloqueado
+        console.error("No se pudo registrar el resultado", e);
+      }
+    }
+    onComplete();
   };
 
   return (

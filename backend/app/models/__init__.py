@@ -5,3 +5,6 @@ from app.models.modulo import Modulo
 from app.models.progreso import Progreso
 from app.models.logro import Logro
 from app.models.estudiante_logro import EstudianteLogro
+from app.models.actividad import Actividad
+from app.models.intento import Intento
+from app.models.asignacion import Asignacion

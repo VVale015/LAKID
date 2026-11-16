@@ -1,9 +1,11 @@
+// frontend/src/components/activities/ReadingActivity.tsx
 import { useState, useEffect } from "react";
 import { ArrowLeft, Play, Pause } from "lucide-react";
 import { readingStories } from "@/data";
 import FeedbackBanner from "@/components/FeedbackBanner";
 import { useApp } from "@/store";
 import type { AreaKey } from "@/types";
+import { registrarResultado, progresoAEstudiante } from "@/services/resultados";
 
 interface Props {
   onBack: () => void;
@@ -21,13 +23,14 @@ function speak(text: string) {
 }
 
 export default function ReadingActivity({ onBack, onComplete }: Props) {
-  const { currentStudent, completeActivity } = useApp();
+  const { currentStudent, completeActivity, updateStudent } = useApp();
   const [storyIndex, setStoryIndex] = useState(0);
   const [questionIndex, setQuestionIndex] = useState(0);
   const [phase, setPhase] = useState<"reading" | "questions">("reading");
   const [feedback, setFeedback] = useState<{ type: "correct" | "incorrect"; msg: string } | null>(null);
   const [selected, setSelected] = useState<number | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
+  const [correctCount, setCorrectCount] = useState(0);
 
   const story = readingStories[storyIndex];
   const question = story.questions[questionIndex];
@@ -55,26 +58,45 @@ export default function ReadingActivity({ onBack, onComplete }: Props) {
     if (selected !== null) return;
     setSelected(optionIndex);
     const correct = optionIndex === question.answer;
+    if (correct) setCorrectCount((n) => n + 1);
     setFeedback({
       type: correct ? "correct" : "incorrect",
       msg: correct ? "¡Muy bien!" : "Inténtalo nuevamente",
     });
   };
 
-  const handleFeedbackDone = () => {
+  const handleFeedbackDone = async () => {
     setFeedback(null);
     setSelected(null);
+
+    // Quedan preguntas en este cuento
     if (questionIndex + 1 < story.questions.length) {
       setQuestionIndex(questionIndex + 1);
-    } else if (storyIndex + 1 < readingStories.length) {
-      if (currentStudent) completeActivity(currentStudent.id, "reading" as AreaKey);
+      return;
+    }
+
+    // Terminó un cuento, pero quedan más
+    if (storyIndex + 1 < readingStories.length) {
       setStoryIndex(storyIndex + 1);
       setQuestionIndex(0);
       setPhase("reading");
-    } else {
-      if (currentStudent) completeActivity(currentStudent.id, "reading" as AreaKey);
-      onComplete();
+      return;
     }
+
+    // Último cuento: se registra UNA sola vez el resultado de la actividad
+  const totalPreguntas = readingStories.reduce((n, s) => n + s.questions.length, 0);
+  const porcentaje = Math.round((correctCount / totalPreguntas) * 100);
+    if (currentStudent) {
+      // Temporal: mantiene al día las asignaciones locales hasta conectarlas al back
+      completeActivity(currentStudent.id, "reading" as AreaKey);
+      try {
+        const resultado = await registrarResultado("reading", porcentaje);
+        updateStudent(currentStudent.id, progresoAEstudiante(resultado.progreso));
+      } catch (e) {
+        console.error("No se pudo registrar el resultado", e);
+      }
+    }
+    onComplete();
   };
 
   return (

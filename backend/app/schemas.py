@@ -10,7 +10,7 @@ Convención:
 from datetime import date, datetime
 from typing import Optional
 
-from pydantic import BaseModel, ConfigDict, EmailStr, Field, model_validator
+from pydantic import BaseModel, ConfigDict, EmailStr, Field, field_validator, model_validator
 
 
 class ORMModel(BaseModel):
@@ -451,3 +451,13 @@ class LogroOut(BaseModel):
     nombre: str
     descripcion: str | None = None
     fecha_obtencion: datetime
+    
+class ResultadoRequest(BaseModel):
+    actividad_codigo: str  # ej. "colors-basic"
+    porcentaje: float = Field(ge=0, le=100)  # resultado del niño, de 0 a 100
+
+
+class ResultadoOut(BaseModel):
+    numero_intento: int
+    asignacion_completada: bool
+    progreso: ProgresoOut  # el progreso ya actualizado
