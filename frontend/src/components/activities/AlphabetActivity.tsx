@@ -23,6 +23,16 @@ function speak(text: string) {
   }
 }
 
+// Devuelve una copia de la lista en orden aleatorio
+function mezclar<T>(lista: T[]): T[] {
+  const copia = [...lista];
+  for (let i = copia.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [copia[i], copia[j]] = [copia[j], copia[i]];
+  }
+  return copia;
+}
+
 export default function AlphabetActivity({ onBack, onComplete }: Props) {
   const { currentStudent, completeActivity, updateStudent } = useApp();
   const [index, setIndex] = useState(0);
@@ -30,7 +40,11 @@ export default function AlphabetActivity({ onBack, onComplete }: Props) {
   const [feedback, setFeedback] = useState<{ type: "correct" | "incorrect"; msg: string } | null>(null);
   const [selected, setSelected] = useState<string | null>(null);
 
-  const question = letterQuestions[index];
+  const [preguntas] = useState(() =>
+    mezclar(letterQuestions).map((q) => ({ ...q, options: mezclar(q.options) })),
+  );
+  
+  const question = preguntas[index];
 
   useEffect(() => {
     const timer = setTimeout(() => speak(`Letra ${question.letter}, de ${question.word}`), 300);
@@ -52,13 +66,13 @@ export default function AlphabetActivity({ onBack, onComplete }: Props) {
   setFeedback(null);
   setSelected(null);
 
-  if (index + 1 < letterQuestions.length) {
+  if (index + 1 < preguntas.length) {
     setIndex(index + 1);
     return;
   }
 
   // Última pregunta: se registra UNA sola vez el resultado de la actividad
-  const porcentaje = Math.round((correctCount / letterQuestions.length) * 100);
+  const porcentaje = Math.round((correctCount / preguntas.length) * 100);
     if (currentStudent) {
       // Temporal: mantiene al día las asignaciones locales hasta conectarlas al back
       completeActivity(currentStudent.id, "alphabet" as AreaKey);
@@ -82,13 +96,13 @@ export default function AlphabetActivity({ onBack, onComplete }: Props) {
           🔤 Abecedario
         </h1>
         <span className="ml-auto text-sm font-bold text-slate-400">
-          {index + 1}/{letterQuestions.length}
+          {index + 1}/{preguntas.length}
         </span>
       </div>
 
       <div className="max-w-xl mx-auto px-5 py-8 flex flex-col items-center">
         <div className="flex gap-2 mb-8">
-          {letterQuestions.map((_, i) => (
+          {preguntas.map((_, i) => (
             <div
               key={i}
               className={`h-2 rounded-full transition-all ${i === index ? "w-8 bg-sky-500" : i < index ? "w-2 bg-sky-300" : "w-2 bg-slate-200"}`}

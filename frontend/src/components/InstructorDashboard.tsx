@@ -12,7 +12,7 @@ interface Props {
 }
 
 export default function InstructorDashboard({ onLogout }: Props) {
-  const { allStudents, assignments } = useApp();
+  const { allStudents, assignments, currentUser } = useApp();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
   const today = todayISO();
@@ -38,7 +38,7 @@ export default function InstructorDashboard({ onLogout }: Props) {
       <div className="bg-white/80 backdrop-blur-sm px-5 py-4 flex items-center justify-between sticky top-0 z-10 border-b border-slate-100">
         <Logo size="sm" />
         <div className="flex items-center gap-2">
-          <span className="text-sm font-bold text-slate-500">Instructor</span>
+          <span className="text-sm font-bold text-slate-500">{currentUser || "Instructor"}</span>
           <button
             onClick={onLogout}
             aria-label="Cerrar sesión"

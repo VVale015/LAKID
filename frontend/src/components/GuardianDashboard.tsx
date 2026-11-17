@@ -13,7 +13,7 @@ interface Props {
 }
 
 export default function GuardianDashboard({ onAssistant, onLogout }: Props) {
-  const { currentStudent, allStudents, setCurrentStudentId } = useApp();
+  const { currentStudent, allStudents, setCurrentStudentId, currentUser } = useApp();
   const student = currentStudent ?? allStudents[0];
   const areas = Object.entries(areaMeta) as [AreaKey, typeof areaMeta[string]][];
 
@@ -22,7 +22,7 @@ export default function GuardianDashboard({ onAssistant, onLogout }: Props) {
       <div className="bg-white/80 backdrop-blur-sm px-5 py-4 flex items-center justify-between sticky top-0 z-10 border-b border-slate-100">
         <Logo size="sm" />
         <div className="flex items-center gap-2">
-          <span className="text-sm font-bold text-slate-400">Acudiente</span>
+          <span className="text-sm font-bold text-slate-400">{currentUser || "Acudiente"}</span>
           <button
             onClick={onLogout}
             className="p-2 rounded-full bg-slate-100 flex items-center justify-center text-slate-500 hover:bg-slate-200 transition"

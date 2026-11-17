@@ -117,7 +117,7 @@ export default function Login() {
         setCurrentStudentId(allStudents[0].id);
       }
 
-      setCurrentUser(datos.usuario.correo);
+      setCurrentUser(`${datos.usuario.nombre} ${datos.usuario.apellido}`);
       setRole(rolReal);
     } catch (e) {
       localStorage.removeItem("lakid_token");
