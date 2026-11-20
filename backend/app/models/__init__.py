@@ -10,3 +10,4 @@ from app.models.intento import Intento
 from app.models.asignacion import Asignacion
 from app.models.acudiente import Acudiente
 from app.models.acudiente_estudiante import AcudienteEstudiante
+from app.models.instructor import Instructor

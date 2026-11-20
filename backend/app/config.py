@@ -22,6 +22,9 @@ class Settings:
     ALGORITHM: str = os.getenv("ALGORITHM", "HS256")
     ACCESS_TOKEN_EXPIRE_MINUTES: int = int(os.getenv("ACCESS_TOKEN_EXPIRE_MINUTES", "60"))
 
+    # Código secreto para que un instructor pueda registrarse (vacío = registro de instructores desactivado)
+    INVITACION_INSTRUCTOR: str = os.getenv("INVITACION_INSTRUCTOR", "")
+
     # Orígenes permitidos para el frontend (separados por coma)
     CORS_ORIGINS: list[str] = [
         origin.strip()

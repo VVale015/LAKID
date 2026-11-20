@@ -1,10 +1,11 @@
 // InstructorDashboard.tsx
 import { useState } from "react";
-import { LogOut, ChevronRight, Search, AlertTriangle } from "lucide-react";
+import { LogOut, ChevronRight, Search, AlertTriangle, Users } from "lucide-react";
 import { useApp } from "@/store";
 import { Logo } from "./Logo";
 import ProgressBar from "./ProgressBar";
 import StudentDetail from "./instructor/StudentDetail";
+import InstructorGestion from "./instructor/InstructorGestion";
 import { getAssignmentStatus, todayISO } from "@/utils/assignments";
 
 interface Props {
@@ -15,12 +16,17 @@ export default function InstructorDashboard({ onLogout }: Props) {
   const { allStudents, assignments, currentUser } = useApp();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const [search, setSearch] = useState("");
+  const [gestionando, setGestionando] = useState(false);
   const today = todayISO();
 
   const filtered = allStudents.filter((s) =>
     s.name.toLowerCase().includes(search.toLowerCase())
   );
   const selected = allStudents.find((s) => s.id === selectedId);
+
+    if (gestionando) {
+    return <InstructorGestion onBack={() => setGestionando(false)} />;
+  }
 
   if (selected) {
     return <StudentDetail student={selected} onBack={() => setSelectedId(null)} />;
@@ -71,6 +77,20 @@ export default function InstructorDashboard({ onLogout }: Props) {
             </div>
           </div>
         </div>
+
+        <button
+          onClick={() => setGestionando(true)}
+          className="w-full bg-white rounded-3xl p-5 shadow-sm flex items-center gap-4 hover:shadow-md hover:scale-[1.01] active:scale-95 transition text-left"
+        >
+          <div className="w-14 h-14 rounded-2xl bg-amber-100 flex items-center justify-center flex-shrink-0">
+            <Users className="w-7 h-7 text-amber-700" />
+          </div>
+          <div className="flex-1">
+            <h2 className="text-lg font-extrabold text-slate-700">Vínculos e insignias</h2>
+            <p className="text-sm text-slate-500">Asigna niños a acudientes y otorga insignias.</p>
+          </div>
+          <ChevronRight className="w-5 h-5 text-slate-400 flex-shrink-0" />
+        </button>
 
         <div className="relative">
           <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-500" />
