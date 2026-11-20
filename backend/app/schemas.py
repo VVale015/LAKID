@@ -499,3 +499,49 @@ class LogroCatalogoOut(BaseModel):
 
 class OtorgarLogroRequest(BaseModel):
     logros_id: int
+    
+# ============================================================
+# REGISTRO PÚBLICO (acudiente e instructor)
+# ============================================================
+class _RegistroBase(BaseModel):
+    nombre: str = Field(..., min_length=2, max_length=100)
+    apellido: str = Field(..., min_length=2, max_length=100)
+    correo: EmailStr
+    password: str = Field(..., min_length=8, max_length=72)
+    confirmar_password: str
+
+    @field_validator("password")
+    @classmethod
+    def password_con_letras_y_numeros(cls, v: str) -> str:
+        if not any(c.isalpha() for c in v) or not any(c.isdigit() for c in v):
+            raise ValueError("La contraseña debe tener letras y números")
+        return v
+
+    @model_validator(mode="after")
+    def passwords_coinciden(self):
+        if self.password != self.confirmar_password:
+            raise ValueError("Las contraseñas no coinciden")
+        return self
+
+
+class RegistroAcudienteRequest(_RegistroBase):
+    telefono: Optional[str] = Field(None, max_length=30)
+    parentesco: Optional[str] = Field(None, max_length=50)
+
+
+class RegistroInstructorRequest(_RegistroBase):
+    especialidad: Optional[str] = Field(None, max_length=100)
+    codigo_invitacion: str = Field(..., min_length=1, max_length=100)
+
+
+class RegistroOut(BaseModel):
+    mensaje: str
+    correo: str
+    
+class PendienteOut(BaseModel):
+    usuarios_id: int
+    nombre: str
+    apellido: str
+    correo: str
+    telefono: str | None = None
+    parentesco: str | None = None

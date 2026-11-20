@@ -61,3 +61,17 @@ def dar_logro(
     db: Session = Depends(get_db),
 ):
     return instructor_service.otorgar_logro(db, estudiantes_id, datos.logros_id)
+
+@router.get("/pendientes", response_model=list[schemas.PendienteOut])
+def pendientes(db: Session = Depends(get_db)):
+    return instructor_service.listar_pendientes(db)
+
+
+@router.post("/pendientes/{usuarios_id}/aprobar", status_code=204)
+def aprobar(usuarios_id: int, db: Session = Depends(get_db)):
+    instructor_service.aprobar_acudiente(db, usuarios_id)
+
+
+@router.post("/pendientes/{usuarios_id}/rechazar", status_code=204)
+def rechazar(usuarios_id: int, db: Session = Depends(get_db)):
+    instructor_service.rechazar_acudiente(db, usuarios_id)

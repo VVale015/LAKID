@@ -36,7 +36,7 @@ def listar_acudientes(db: Session) -> list[schemas.AcudienteListaOut]:
     filas = db.execute(
         select(Acudiente, Usuario)
         .join(Usuario, Usuario.usuarios_id == Acudiente.usuarios_id)
-        .where(Acudiente.status.is_(True))
+        .where(Acudiente.status.is_(True), Usuario.status.is_(True))
         .order_by(Acudiente.acudientes_id)
     ).all()
     return [
@@ -203,3 +203,60 @@ def otorgar_logro(
         descripcion=logro.descripcion,
         fecha_obtencion=asignado.fecha_obtencion,
     )
+    
+def listar_pendientes(db: Session) -> list[schemas.PendienteOut]:
+    filas = db.execute(
+        select(Acudiente, Usuario)
+        .join(Usuario, Usuario.usuarios_id == Acudiente.usuarios_id)
+        .where(Usuario.status.is_(False), Acudiente.status.is_(True))
+        .order_by(Usuario.usuarios_id)
+    ).all()
+    return [
+        schemas.PendienteOut(
+            usuarios_id=u.usuarios_id,
+            nombre=u.nombre,
+            apellido=u.apellido,
+            correo=u.correo,
+            telefono=a.telefono,
+            parentesco=a.parentesco,
+        )
+        for a, u in filas
+    ]
+
+
+def _buscar_pendiente(db: Session, usuarios_id: int):
+    fila = db.execute(
+        select(Acudiente, Usuario)
+        .join(Usuario, Usuario.usuarios_id == Acudiente.usuarios_id)
+        .where(
+            Usuario.usuarios_id == usuarios_id,
+            Usuario.status.is_(False),
+            Acudiente.status.is_(True),
+        )
+    ).first()
+    if fila is None:
+        raise HTTPException(status_code=404, detail="Solicitud no encontrada")
+    return fila
+
+
+def aprobar_acudiente(db: Session, usuarios_id: int) -> None:
+    _, usuario = _buscar_pendiente(db, usuarios_id)
+    try:
+        usuario.status = True
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise
+
+
+def rechazar_acudiente(db: Session, usuarios_id: int) -> None:
+    acudiente, usuario = _buscar_pendiente(db, usuarios_id)
+    # Se elimina: así no quedan datos personales de alguien que no fue aceptado
+    try:
+        db.delete(acudiente)
+        db.flush()
+        db.delete(usuario)
+        db.commit()
+    except Exception:
+        db.rollback()
+        raise

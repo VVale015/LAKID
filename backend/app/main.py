@@ -6,7 +6,7 @@ from sqlalchemy.orm import Session
 
 from app.config import settings
 from app.database import get_db
-from app.routers import auth, estudiantes, acudientes, instructores
+from app.routers import auth, estudiantes, acudientes, instructores, registro
 
 app = FastAPI(title=settings.APP_NAME, version=settings.APP_VERSION)
 
@@ -23,6 +23,8 @@ app.include_router(auth.router)
 app.include_router(estudiantes.router)
 app.include_router(acudientes.router)
 app.include_router(instructores.router)
+app.include_router(registro.router)
+
 @app.get("/ping")
 def ping():
     """Prueba de vida: no usa la base de datos."""
