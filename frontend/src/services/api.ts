@@ -18,6 +18,8 @@ async function leerError(respuesta: Response, ruta: string): Promise<Error> {
     const datos = await respuesta.json();
     if (typeof datos.detail === "string") {
       mensaje = datos.detail;
+    } else if (Array.isArray(datos.detail) && datos.detail[0]?.msg) {
+      mensaje = String(datos.detail[0].msg).replace(/^Value error, /, "");
     }
   } catch {
     // si no venía JSON, se queda el mensaje genérico
@@ -37,6 +39,10 @@ export async function apiGet<T>(ruta: string): Promise<T> {
     throw new Error(`La respuesta de ${API_URL}${ruta} no es JSON`);
   }
 
+  if (respuesta.status === 204) {
+    return undefined as T;
+  }
+
   return respuesta.json() as Promise<T>;
 }
 
@@ -49,6 +55,10 @@ export async function apiPost<T>(ruta: string, cuerpo: unknown): Promise<T> {
 
   if (!respuesta.ok) {
     throw await leerError(respuesta, ruta);
+  }
+
+  if (respuesta.status === 204) {
+    return undefined as T;
   }
 
   return respuesta.json() as Promise<T>;

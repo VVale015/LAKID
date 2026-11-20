@@ -2,6 +2,7 @@
 import { useState } from "react";
 import { Mail, Lock, Eye, EyeOff, GraduationCap, Users, Presentation, ArrowRight } from "lucide-react";
 import { Logo } from "./Logo";
+import Registro from "./Registro";
 import { useApp } from "../store";
 import { apiGet, apiPost } from "../services/api";
 import type { AreaKey, Role } from "../types";
@@ -54,6 +55,7 @@ export default function Login() {
   const [selectedRole, setSelectedRole] = useState<Role | null>(null);
   const [error, setError] = useState("");
   const [showRecover, setShowRecover] = useState(false);
+  const [showRegistro, setShowRegistro] = useState(false);
 
   const [cargando, setCargando] = useState(false);
 
@@ -127,6 +129,10 @@ export default function Login() {
     }
   };
 
+  if (showRegistro) {
+    return <Registro onBack={() => setShowRegistro(false)} />;
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-sky-50 via-indigo-50 to-purple-50 flex items-center justify-center p-4">
       {/* Decorative shapes */}
@@ -148,25 +154,11 @@ export default function Login() {
           <div className="space-y-4">
             <h2 className="text-xl font-bold text-slate-700 text-center">Recuperar contraseña</h2>
             <p className="text-sm text-slate-500 text-center">
-              Ingresa tu correo y te enviaremos las instrucciones
+              Esta función estará disponible próximamente.
             </p>
-            <div className="relative">
-              <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-slate-400" />
-              <input
-                type="email"
-                placeholder="correo@ejemplo.com"
-                className="w-full pl-11 pr-4 py-3.5 rounded-2xl border-2 border-slate-200 focus:border-sky-400 focus:outline-none transition text-slate-700"
-              />
-            </div>
             <button
               onClick={() => setShowRecover(false)}
               className="w-full py-3.5 bg-gradient-to-r from-sky-500 to-indigo-500 text-white font-bold rounded-2xl shadow-lg hover:scale-[1.02] active:scale-95 transition"
-            >
-              Enviar instrucciones
-            </button>
-            <button
-              onClick={() => setShowRecover(false)}
-              className="w-full text-center text-sm text-slate-400 hover:text-slate-600 transition"
             >
               Volver al inicio de sesión
             </button>
@@ -247,6 +239,12 @@ export default function Login() {
               className="w-full text-center text-sm text-slate-400 hover:text-sky-500 transition font-medium"
             >
               ¿Olvidaste tu contraseña?
+            </button>
+            <button
+              onClick={() => setShowRegistro(true)}
+              className="w-full text-center text-sm text-slate-500 hover:text-sky-500 transition font-bold"
+            >
+              ¿No tienes cuenta? Regístrate
             </button>
           </div>
         )}

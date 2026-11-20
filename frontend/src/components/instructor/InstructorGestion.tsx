@@ -1,6 +1,6 @@
 // InstructorGestion.tsx
 import { useEffect, useState } from "react";
-import { ArrowLeft, Link2, Award, Trash2 } from "lucide-react";
+import { ArrowLeft, Link2, Award, Trash2, UserCheck } from "lucide-react";
 import { apiGet, apiPost, apiDelete } from "@/services/api";
 
 interface Props {
@@ -40,6 +40,15 @@ interface LogroEstudiante {
   fecha_obtencion: string;
 }
 
+interface Pendiente {
+  usuarios_id: number;
+  nombre: string;
+  apellido: string;
+  correo: string;
+  telefono: string | null;
+  parentesco: string | null;
+}
+
 const selectClase =
   "w-full px-4 py-3 rounded-2xl border-2 border-slate-200 bg-white text-slate-700 focus:border-amber-400 focus:outline-none transition";
 const botonClase =
@@ -63,6 +72,7 @@ export default function InstructorGestion({ onBack }: Props) {
   const [estLogroSel, setEstLogroSel] = useState("");
   const [logroSel, setLogroSel] = useState("");
   const [logrosDelEst, setLogrosDelEst] = useState<LogroEstudiante[]>([]);
+  const [pendientes, setPendientes] = useState<Pendiente[]>([]);
 
   const avisar = (texto: string) => {
     setError("");
@@ -83,6 +93,40 @@ export default function InstructorGestion({ onBack }: Props) {
       return;
     }
     setLogrosDelEst(await apiGet<LogroEstudiante[]>(`/instructores/estudiantes/${id}/logros`));
+  };
+
+    const recargarPendientes = async () => {
+    setPendientes(await apiGet<Pendiente[]>("/instructores/pendientes"));
+  };
+
+  useEffect(() => {
+    recargarPendientes().catch(fallar);
+  }, []);
+
+  const aprobar = async (p: Pendiente) => {
+    try {
+      await apiPost<void>(`/instructores/pendientes/${p.usuarios_id}/aprobar`, {});
+      await recargarPendientes();
+      setAcudientes(await apiGet<AcudienteLista[]>("/instructores/acudientes"));
+      avisar(`Cuenta aprobada: ${p.nombre} ${p.apellido}`);
+    } catch (e) {
+      fallar(e);
+      recargarPendientes().catch(() => {});
+    }
+  };
+
+  const rechazar = async (p: Pendiente) => {
+    const ok = window.confirm(
+      `¿Rechazar la solicitud de ${p.nombre} ${p.apellido}? Sus datos se eliminarán.`,
+    );
+    if (!ok) return;
+    try {
+      await apiPost<void>(`/instructores/pendientes/${p.usuarios_id}/rechazar`, {});
+      await recargarPendientes();
+      avisar("Solicitud rechazada");
+    } catch (e) {
+      fallar(e);
+    }
   };
 
   // Carga inicial: estudiantes, acudientes, vínculos y catálogo de insignias
@@ -182,6 +226,46 @@ export default function InstructorGestion({ onBack }: Props) {
           <p className="text-center text-slate-500 font-bold mt-10">Cargando...</p>
         ) : (
           <>
+            {/* Solicitudes de acudientes */}
+            <div className="bg-white rounded-3xl p-5 shadow-sm space-y-3">
+              <div className="flex items-center gap-2">
+                <UserCheck className="w-5 h-5 text-amber-500" />
+                <h2 className="font-extrabold text-slate-700">Solicitudes de acudientes</h2>
+              </div>
+
+              {pendientes.length === 0 && (
+                <p className="text-sm text-slate-400">No hay solicitudes pendientes.</p>
+              )}
+
+              {pendientes.map((p) => (
+                <div key={p.usuarios_id} className="bg-amber-50 rounded-2xl p-3 space-y-2">
+                  <div>
+                    <p className="text-sm font-bold text-slate-700">
+                      {p.nombre} {p.apellido}
+                    </p>
+                    <p className="text-xs text-slate-500">
+                      {p.correo}
+                      {p.parentesco ? ` · ${p.parentesco}` : ""}
+                      {p.telefono ? ` · ${p.telefono}` : ""}
+                    </p>
+                  </div>
+                  <div className="grid grid-cols-2 gap-2">
+                    <button
+                      onClick={() => aprobar(p)}
+                      className="py-2 rounded-xl bg-green-100 text-green-700 text-sm font-bold hover:bg-green-200 transition"
+                    >
+                      Aprobar
+                    </button>
+                    <button
+                      onClick={() => rechazar(p)}
+                      className="py-2 rounded-xl bg-rose-100 text-rose-600 text-sm font-bold hover:bg-rose-200 transition"
+                    >
+                      Rechazar
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
             {/* Vínculos */}
             <div className="bg-white rounded-3xl p-5 shadow-sm space-y-4">
               <div className="flex items-center gap-2">
