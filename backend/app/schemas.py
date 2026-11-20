@@ -460,4 +460,42 @@ class ResultadoRequest(BaseModel):
 class ResultadoOut(BaseModel):
     numero_intento: int
     asignacion_completada: bool
-    progreso: ProgresoOut  # el progreso ya actualizado
+    progreso: ProgresoOut  # el progreso ya actualizado  
+# ============================================================
+# INSTRUCTOR: listas y vínculos
+# ============================================================
+class EstudianteListaOut(BaseModel):
+    estudiantes_id: int
+    nombre: str
+    apellido: str
+    avatar: str | None = None
+    grado: str | None = None
+    edad: int
+
+class AcudienteListaOut(BaseModel):
+    acudientes_id: int
+    nombre: str
+    apellido: str
+    correo: str
+
+class VinculoRequest(BaseModel):
+    acudientes_id: int
+    estudiantes_id: int
+    parentesco: str | None = Field(None, max_length=50)
+
+class VinculoOut(BaseModel):
+    acudiente_estudiante_id: int
+    acudientes_id: int
+    acudiente_nombre: str
+    estudiantes_id: int
+    estudiante_nombre: str
+    parentesco: str | None = None
+    
+class LogroCatalogoOut(BaseModel):
+    logros_id: int
+    nombre: str
+    descripcion: str | None = None
+
+
+class OtorgarLogroRequest(BaseModel):
+    logros_id: int

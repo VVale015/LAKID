@@ -53,3 +53,14 @@ export async function apiPost<T>(ruta: string, cuerpo: unknown): Promise<T> {
 
   return respuesta.json() as Promise<T>;
 }
+
+export async function apiDelete(ruta: string): Promise<void> {
+  const respuesta = await fetch(`${API_URL}${ruta}`, {
+    method: "DELETE",
+    headers: encabezados(),
+  });
+
+  if (!respuesta.ok) {
+    throw await leerError(respuesta, ruta);
+  }
+}
